@@ -1,0 +1,24 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: model-catalog-sources
+  namespace: rhoai-model-registries
+  labels:
+    app: model-catalog
+    app.kubernetes.io/component: model-catalog
+    app.kubernetes.io/created-by: model-registry-operator
+    app.kubernetes.io/instance: model-catalog
+    app.kubernetes.io/managed-by: model-registry-operator
+    app.kubernetes.io/name: model-catalog
+    app.kubernetes.io/part-of: model-catalog
+    component: model-catalog
+data:
+  sources.yaml: |
+    catalogs:
+        - enabled: true
+          id: huggingface_deprecated_models
+          name: HuggingFace-Deprecated-Models
+          properties:
+            allowedOrganization: ibm-granite
+            apiKey: ""
+          type: hf

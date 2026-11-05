@@ -1,0 +1,56 @@
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+metadata:
+  annotations:
+    internal.serving.kserve.io/storage-initializer-sourceuri: 'hf://ibm-granite/granite-3.2-8b-instruct'
+    security.opendatahub.io/enable-auth: 'false'
+    opendatahub.io/hardware-profile-resource-version: '39915'
+    prometheus.io/port: '8080'
+    openshift.io/description: chat
+    openshift.io/display-name: ibm-granite/granite-3.2-8b-instruct
+    serving.kserve.io/deploymentMode: Standard
+    prometheus.io/path: /metrics
+    opendatahub.io/kserve-runtime: vllm
+    service.beta.openshift.io/serving-cert-secret-name: ibm-granitegranite-32-8b-instr-predictor-serving-cert
+    opendatahub.io/connections: secret-6wnd6h
+    opendatahub.io/model-type: generative
+  name: ibm-granitegranite-32-8b-instr-predictor
+  namespace: deprecated-models-lab
+  labels:
+    app: isvc.ibm-granitegranite-32-8b-instr-predictor
+    component: predictor
+    networking.kserve.io/visibility: exposed
+    opendatahub.io/dashboard: 'true'
+    opendatahub.io/genai-asset: 'true'
+    serving.kserve.io/inferenceservice: ibm-granitegranite-32-8b-instr
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: ibm-granitegranite-32-8b-instr-predictor
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 1
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      selectPolicy: Max
+      policies:
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15

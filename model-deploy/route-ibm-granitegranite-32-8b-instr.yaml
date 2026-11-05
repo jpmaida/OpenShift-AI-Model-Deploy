@@ -1,0 +1,20 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  annotations:
+    haproxy.router.openshift.io/timeout: 30s
+  name: ibm-granitegranite-32-8b-instr
+  namespace: deprecated-models-lab
+  labels:
+    inferenceservice-name: ibm-granitegranite-32-8b-instr
+spec:
+  to:
+    kind: Service
+    name: ibm-granitegranite-32-8b-instr-predictor
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

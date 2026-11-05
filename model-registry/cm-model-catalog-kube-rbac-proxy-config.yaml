@@ -1,0 +1,23 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: model-catalog-kube-rbac-proxy-config
+  namespace: rhoai-model-registries
+  labels:
+    app: model-catalog
+    app.kubernetes.io/component: model-catalog
+    app.kubernetes.io/created-by: model-registry-operator
+    app.kubernetes.io/instance: model-catalog-kube-rbac-proxy-config
+    app.kubernetes.io/managed-by: model-registry-operator
+    app.kubernetes.io/name: model-catalog
+    app.kubernetes.io/part-of: model-catalog
+    component: model-catalog
+data:
+  config-file.yaml: |
+    authorization:
+      resourceAttributes:
+        apiVersion: v1
+        resource: services
+        verb: get
+        namespace: rhoai-model-registries
+        name: model-catalog

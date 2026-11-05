@@ -1,0 +1,14 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: ibm-granitegranite-32-8b-instr-metrics-dashboard
+  namespace: deprecated-models-lab
+  labels:
+    app.kubernetes.io/component: kserve
+    app.kubernetes.io/managed-by: odh-model-controller
+    app.kubernetes.io/name: odh-model-controller
+    app.kubernetes.io/part-of: odh-model-serving
+    opendatahub.io/managed: 'true'
+data:
+  metrics: "{\n        \"config\": [\n\t\t\t{\n\t\t\t\t\"title\": \"Requests per 5 minutes\",\n\t\t\t\t\"type\": \"REQUEST_COUNT\",\n\t\t\t\t\"queries\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"title\": \"Number of successful incoming requests\",\n\t\t\t\t\t\t\"query\": \"round(sum(increase(vllm:request_success_total{namespace='deprecated-models-lab',model_name='ibm-granitegranite-32-8b-instr',finished_reason!~'error|abort'}[5m])))\"\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"title\": \"Number of failed incoming requests\",\n\t\t\t\t\t\t\"query\": \"round(sum(increase(vllm:request_success_total{namespace='deprecated-models-lab',model_name='ibm-granitegranite-32-8b-instr',finished_reason=~'error|abort'}[5m])))\"\n\t\t\t\t\t}\n\t\t\t\t]\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"title\": \"Average response time (ms)\",\n\t\t\t\t\"type\": \"MEAN_LATENCY\",\n\t\t\t\t\"queries\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"title\": \"Average e2e latency\",\n\t\t\t\t\t\t\"query\": \"histogram_quantile(0.5, sum(rate(vllm:e2e_request_latency_seconds_bucket{namespace='deprecated-models-lab', model_name='ibm-granitegranite-32-8b-instr'}[1m])) by (le, model_name))\"\n\t\t\t\t\t}\n\t\t\t\t]\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"title\": \"CPU utilization %\",\n\t\t\t\t\"type\": \"CPU_USAGE\",\n\t\t\t\t\"queries\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"title\": \"CPU usage\",\n\t\t\t\t\t\t\"query\":  \"sum(pod:container_cpu_usage:sum{namespace='deprecated-models-lab', pod=~'ibm-granitegranite-32-8b-instr-predictor-.*'})/sum(kube_pod_resource_limit{resource='cpu', pod=~'ibm-granitegranite-32-8b-instr-predictor-.*', namespace='deprecated-models-lab'})\"\n\t\t\t\t\t}\n\t\t\t\t]\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"title\": \"Memory utilization %\",\n\t\t\t\t\"type\": \"MEMORY_USAGE\",\n\t\t\t\t\"queries\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"title\": \"Memory usage\",\n\t\t\t\t\t\t\"query\":  \"sum(container_memory_working_set_bytes{namespace='deprecated-models-lab', pod=~'ibm-granitegranite-32-8b-instr-predictor-.*'})/sum(kube_pod_resource_limit{resource='memory', pod=~'ibm-granitegranite-32-8b-instr-predictor-.*', namespace='deprecated-models-lab'})\"\n\t\t\t\t\t}\n\t\t\t\t]\n\t\t\t}\n\t\t]\n    }"
+  supported: 'true'

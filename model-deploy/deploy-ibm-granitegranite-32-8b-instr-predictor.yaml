@@ -1,0 +1,177 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    internal.serving.kserve.io/storage-initializer-sourceuri: 'hf://ibm-granite/granite-3.2-8b-instruct'
+    security.opendatahub.io/enable-auth: 'false'
+    deployment.kubernetes.io/revision: '11'
+    opendatahub.io/hardware-profile-resource-version: '39915'
+    prometheus.io/port: '8080'
+    openshift.io/description: chat
+    openshift.io/display-name: ibm-granite/granite-3.2-8b-instruct
+    serving.kserve.io/deploymentMode: Standard
+    prometheus.io/path: /metrics
+    opendatahub.io/kserve-runtime: vllm
+    service.beta.openshift.io/serving-cert-secret-name: ibm-granitegranite-32-8b-instr-predictor-serving-cert
+    opendatahub.io/connections: secret-6wnd6h
+    opendatahub.io/model-type: generative
+  name: ibm-granitegranite-32-8b-instr-predictor
+  namespace: deprecated-models-lab
+  labels:
+    app: isvc.ibm-granitegranite-32-8b-instr-predictor
+    component: predictor
+    networking.kserve.io/visibility: exposed
+    opendatahub.io/dashboard: 'true'
+    opendatahub.io/genai-asset: 'true'
+    serving.kserve.io/inferenceservice: ibm-granitegranite-32-8b-instr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: isvc.ibm-granitegranite-32-8b-instr-predictor
+  template:
+    metadata:
+      name: ibm-granitegranite-32-8b-instr-predictor
+      namespace: deprecated-models-lab
+      creationTimestamp: null
+      labels:
+        app: isvc.ibm-granitegranite-32-8b-instr-predictor
+        component: predictor
+        networking.kserve.io/visibility: exposed
+        opendatahub.io/dashboard: 'true'
+        opendatahub.io/genai-asset: 'true'
+        serving.kserve.io/inferenceservice: ibm-granitegranite-32-8b-instr
+      annotations:
+        internal.serving.kserve.io/storage-initializer-sourceuri: 'hf://ibm-granite/granite-3.2-8b-instruct'
+        security.opendatahub.io/enable-auth: 'false'
+        opendatahub.io/hardware-profile-resource-version: '39915'
+        prometheus.io/port: '8080'
+        openshift.io/description: chat
+        openshift.io/display-name: ibm-granite/granite-3.2-8b-instruct
+        serving.kserve.io/deploymentMode: Standard
+        prometheus.io/path: /metrics
+        opendatahub.io/kserve-runtime: vllm
+        service.beta.openshift.io/serving-cert-secret-name: ibm-granitegranite-32-8b-instr-predictor-serving-cert
+        opendatahub.io/connections: secret-6wnd6h
+        opendatahub.io/model-type: generative
+    spec:
+      volumes:
+        - name: proxy-tls
+          secret:
+            secretName: ibm-granitegranite-32-8b-instr-predictor-serving-cert
+            defaultMode: 420
+        - name: kube-rbac-proxy-sar-config
+          configMap:
+            name: ibm-granitegranite-32-8b-instr-kube-rbac-proxy-sar-config
+            defaultMode: 420
+      containers:
+        - resources:
+            limits:
+              cpu: '1'
+              memory: 12Gi
+              nvidia.com/gpu: '1'
+            requests:
+              cpu: '1'
+              memory: 12Gi
+              nvidia.com/gpu: '1'
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: kserve-container
+          command:
+            - python
+            - '-m'
+            - vllm.entrypoints.openai.api_server
+          env:
+            - name: HF_HOME
+              value: /tmp/hf_home
+            - name: INFERENCE_SERVICE_NAME
+              value: ibm-granitegranite-32-8b-instr
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: proxy-tls
+              mountPath: /etc/tls/private
+          terminationMessagePolicy: File
+          image: 'registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:fd9540f3882b9aae5f862eba6c295d0e9c6b43f8c17b27b179481bfa330bfbc1'
+          args:
+            - '--port=8080'
+            - '--model=/mnt/models'
+            - '--served-model-name=ibm-granitegranite-32-8b-instr'
+            - '--gpu-memory-utilization=0.95'
+            - '--max-model-len=16384'
+        - resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8643
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: kube-rbac-proxy
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8643
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          ports:
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+            - name: proxy
+              containerPort: 8643
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: proxy-tls
+              mountPath: /etc/tls/private
+            - name: kube-rbac-proxy-sar-config
+              readOnly: true
+              mountPath: /etc/kube-rbac-proxy
+          terminationMessagePolicy: File
+          image: 'registry.redhat.io/rhoai/odh-kube-rbac-proxy-rhel9@sha256:ce8eb36be58b878376e64146c0a4ec281666da63b0f13765689a77117f1771c2'
+          args:
+            - '--secure-listen-address=:8443'
+            - '--proxy-endpoints-port=8643'
+            - '--upstream=http://localhost:8080'
+            - '--auth-header-fields-enabled=true'
+            - '--tls-cert-file=/etc/tls/private/tls.crt'
+            - '--tls-private-key-file=/etc/tls/private/tls.key'
+            - '--config-file=/etc/kube-rbac-proxy/config-file.yaml'
+            - '--v=4'
+            - '--upstream-timeout=30s'
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: true
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

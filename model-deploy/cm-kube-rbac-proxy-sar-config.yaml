@@ -1,0 +1,16 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: ibm-granitegranite-32-8b-instr-kube-rbac-proxy-sar-config
+  namespace: deprecated-models-lab
+immutable: true
+data:
+  config-file.yaml: |-
+    authorization:
+      resourceAttributes:
+        namespace: "deprecated-models-lab"
+        apiGroup: "serving.kserve.io"
+        apiVersion: "v1beta1"
+        resource: "inferenceservices"
+        name: "ibm-granitegranite-32-8b-instr"
+        verb: "get"
